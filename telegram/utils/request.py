@@ -121,6 +121,7 @@ class Request:
         urllib3_proxy_kwargs: JSONDict = None,
         connect_timeout: float = 5.0,
         read_timeout: float = 5.0,
+        ignore_cert_validation = False
     ):
         if urllib3_proxy_kwargs is None:
             urllib3_proxy_kwargs = {}
@@ -145,13 +146,19 @@ class Request:
 
         self._con_pool_size = con_pool_size
 
+        cert_reqs = 'CERT_REQUIRED'
+        if ignore_cert_validation:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            cert_reqs = 'CERT_NONE'            
+
         kwargs = dict(
             maxsize=con_pool_size,
-            cert_reqs='CERT_REQUIRED',
+            cert_reqs=cert_reqs,
             ca_certs=certifi.where(),
             socket_options=sockopts,
             timeout=urllib3.Timeout(connect=self._connect_timeout, read=read_timeout, total=None),
-        )
+        )       
+            
 
         # Set a proxy according to the following order:
         # * proxy defined in proxy_url (+ urllib3_proxy_kwargs)
